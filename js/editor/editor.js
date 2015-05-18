@@ -17,6 +17,7 @@ var LOCATION_STATIC = "STATIC";
 var LOCATION_DYNAMIC = "DYNAMIC";
 
 var language_options = {
+    "": "",
     "JAVA": "Java",
     "PYTHON": "Python",
     "RUBY": "Ruby",
@@ -24,6 +25,13 @@ var language_options = {
     "PHP": "Php",
 };
 
+var language_version_options = {
+    "JAVA": [ 4, 5, 6, 7, 8],
+    "PYTHON": [2, 3],
+    "RUBY": [1, 2],
+    ".NET": [1, 2, 3, 4],
+    "PHP": [5.1, 5.2, 5.3, 5.4, 5.5]
+};
 
 var database_options = {
     "MYSQL": "MySql",
@@ -124,6 +132,7 @@ Graph.Node.popovercontent = function(i) {
         [ "Name", this.name],
         [ "Category", this.category],
         [ "Language", this.language],
+        [ "Versions", this.versions],
         [ "Artifact", this.artifact],
         [ "Cost", this.cost],
         [ "Location", location],
@@ -205,11 +214,17 @@ commonset.store = function(node) {
 codetechset.load = function(node) {
     $("#code-language").val(node.language);
     $("#code-artifact").val(node.artifact);
+    Forms.populate_select_from_array(
+        $('#code-version'),
+        language_version_options[node.language]
+    );
+    $("#code-version").val(node.versions);
 };
 
 codetechset.store = function(node) {
     node.language = $("#code-language").val();
     node.artifact = $("#code-artifact").val();
+    node.versions = $("#code-version").val();
 };
 
 databasetechset.load = function(node) {
@@ -302,6 +317,7 @@ infrastructureset.load = function(node) {
     this.radioval("infrastructure", node.infrastructure);
 };
 
+var n0, n1, n2;
 $(document).ready(function() {
     log.debug("ready");
 
@@ -394,6 +410,13 @@ $(document).ready(function() {
     $('input[type=radio][name=nf-location]').change(function() {
         nonfunctionalset.showlocation(true);
     });
+    
+    $('#code-language').change(function() {
+        Forms.populate_select_from_array(
+            $('#code-version'),
+            language_version_options[$('#code-language').val()]
+        );
+    });
 
     $('body').on('click', '.popover button[data-nodeindex]', function () {
         var index = this.getAttribute("data-nodeindex");
@@ -450,18 +473,20 @@ $(document).ready(function() {
         }
     });
     
-    var n0 = Object.create(Graph.WebApplication).init("PHP Node", "PHP", "PHP");
-    var n1 = Object.create(Graph.RestService).init("Rest Service", "rest");
-    var n2 = Object.create(Graph.Database).init("Database", "db");
-    Canvas.init();
-    Canvas.addnode(n0);
-    Canvas.addnode(n1);
-    Canvas.addnode(n2);
-    Canvas.addlink(n0, n1);
-    Canvas.addlink(n1, n2);
+    n0 = Object.create(Graph.WebApplication).init("PHP Node", "PHP", "PHP");
+    n1 = Object.create(Graph.RestService).init("Rest Service", "rest");
+    n2 = Object.create(Graph.Database).init("Database", "db");
+    var canvas = Canvas();
+    canvas.init("canvas");
+    canvas.addnode(n0);
+    canvas.addnode(n1);
+    canvas.addnode(n2);
+    canvas.addlink(n0, n1);
+    canvas.addlink(n1, n2);
     n0.qos = [
         { "metric": "runtime", "operator": "LT", "threshold": 2000 },
         { "metric": "availability", "operator": "GT", "threshold": 99.9 }
     ];
-    Canvas.restart();
+    n0.versions = [ 5.3, 5.4, 5.5 ];
+    canvas.restart();
 });

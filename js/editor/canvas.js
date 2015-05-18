@@ -84,7 +84,7 @@ var Canvas = (function() {
         linking,                    /* true if linking */
         drag;                       /* d3 drag (used for dragging nodes) */
 
-    function init(width, height) {
+    function init(id, width, height) {
         if (width === undefined) {
             width = WIDTH;
         }
@@ -102,7 +102,7 @@ var Canvas = (function() {
         /*
          * Append svg to canvas
          */
-        svg = d3.select("#canvas").append("svg")
+        svg = d3.select("#" + id).append("svg")
             .attr("width", width)
             .attr("height", height)
             .on("mousemove", mousemove)
@@ -533,4 +533,4 @@ var Canvas = (function() {
         removenode: removenode,
         removelink: removelink,
     };
-})();
+});

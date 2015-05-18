@@ -319,11 +319,22 @@ var Forms = (function() {
         }); 
     };
     
+    var populate_select_from_array = function($select, options) {
+        if ($select.length == 0) {
+            log.warn("populate_select_from_array: empty list");
+        }
+        $select.find('option').remove();
+        $.each(options, function(key, value) {
+            $('<option>').val(value).text(value).appendTo($select);
+        }); 
+    };
+    
     return {
         Form: Form,
         Fieldset: Fieldset,
         DynamicTable: DynamicTable,
         radioval: radioval,
         populate_select: populate_select,
+        populate_select_from_array: populate_select_from_array,
     };
 })();
