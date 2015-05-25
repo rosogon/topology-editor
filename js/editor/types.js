@@ -1,0 +1,68 @@
+var Types = function() {
+
+    /*
+     * http://stackoverflow.com/questions/18416749/adding-fontawesome-icons-to-a-d3-graph
+     */
+    Graph.Node.decorate = function(dom_element) {
+        var proto = Object.getPrototypeOf(this);
+        var d3_element = d3.select(dom_element);
+        d3_element.append("svg:text")
+            .attr("x", 0)
+            .attr("y", 10)
+            .attr("class", "type-icon")
+            .text(this.icon? this.icon : "\uf013");
+        d3_element.append("svg:text")
+            .attr("x", 0)
+            .attr("y", 4)
+            .attr("class", "type")
+            .text(this.icon? "" : proto.label);
+    };
+    
+    Graph.Node.update = function(dom_element) {
+        var d3_element = d3.select(dom_element);
+        
+        d3_element.select("circle.node").
+            attr("class", "node " + this.status);
+        
+        d3_element.select(".nodelabel").text(this.label);
+    };
+    
+    
+    var Database = Object.create(Graph.Node).init({
+        name : "Database",
+        label : "DB",
+        type : "Database",
+        icon : "\uf1c0",
+    });
+    
+    
+    var WebApplication = Object.create(Graph.Node).init({
+        name : "WebApplication",
+        label : "www",
+        type : "WebApplication",
+        icon : "\uf0ac",
+    });
+
+
+    var RestService = Object.create(Graph.Node).init({
+        name : "REST Service",
+        label : "REST",
+        type : "RestService",
+    });
+    
+
+    var Cloud = Object.create(Graph.Node).init({
+        name : "Cloud",
+        label : "Cloud",
+        type : "Cloud",
+        icon : "\uf0c2",
+    });
+    
+
+    return {
+        WebApplication: WebApplication,
+        Database: Database,
+        RestService: RestService,
+        Cloud: Cloud
+    };
+}();

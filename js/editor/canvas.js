@@ -31,44 +31,50 @@
  * @author roman.sosa@atos.net
  */
 
+/*
+ * A click gesture generates mousedown, mouseup and click events, in that order.
+ * Preventing the mousedown event from propagating is not sufficient to prevent 
+ * the click event from propagating too. This must be done in a click event 
+ * listener.
+ */
+
+Graph.Link.popovertitle = function(i) {
+    return "";
+};
+
+Graph.Link.popovercontent = function(i) {
+    return "";
+};
+
+Graph.Node.decorate = function(dom_element, i) {
+    d3_element = d3.select(dom_element);
+    d3_element.append("svg:text")
+        .attr("x", 0)
+        .attr("y", 9)
+        .attr("class", "type-icon")
+        .text(i);
+};
+
+Graph.Node.update = function(dom_element, i) {};
+
+Graph.Node.popovertitle = function(i) {
+    return this.name;
+};
+
+Graph.Node.popovercontent = function(i) {
+    var content = 
+        "<dt>Type</dt><dd>" + this.type + "</dd>" + 
+        "<dt>Index</dt><dd>" + i + "</dd>";
+    return "<dl>" + content + "</dl>";
+};
+
 var Canvas = (function() {
 
-    Graph.Link.popovertitle = function(i) {
-        return "";
-    };
-    
-    Graph.Link.popovercontent = function(i) {
-        return "";
-    };
-    
-    Graph.Node.decorate = function(dom_element, i) {
-        d3_element = d3.select(dom_element);
-        d3_element.append("svg:text")
-            .attr("x", 0)
-            .attr("y", 9)
-            .attr("class", "type-icon")
-            .text(i);
-    };
-    
-    Graph.Node.popovertitle = function(i) {
-        return this.name;
-    };
-    
-    Graph.Node.popovercontent = function(i) {
-        var content = 
-            "<dt>Type</dt><dd>" + this.type + "</dd>" + 
-            "<dt>Index</dt><dd>" + i + "</dd>";
-        return "<dl>" + content + "</dl>";
-    };
-    
-    
     var WIDTH = 960,
         HEIGHT = 500;
         
     var NODE_RADIUS = 20;
         
-    var log = Log.getLogger("Canvas").setLevel(Log.DEBUG);
-    
     /*
      * All these variables are initialized in init()
      */
@@ -81,16 +87,21 @@ var Canvas = (function() {
         d3_links,                   /* d3 selection of links */
         d3_nodes,                   /* d3 selection of nodes */
         srcnode,                    /* source node when linking */
+        linkingenabled,             /* set to false in init for a RO canvas */
         linking,                    /* true if linking */
+        linkbydefault,
+        addlinkcallback,
         drag;                       /* d3 drag (used for dragging nodes) */
 
-    function init(id, width, height) {
-        if (width === undefined) {
-            width = WIDTH;
-        }
-        if (height === undefined) {
-            height = HEIGHT;
-        }
+    function init(id, parameters) {
+        
+        var p = parameters || {};
+        
+        width = p.width || WIDTH;
+        height = p.height || HEIGHT;
+        linkingenabled = _get(p.linkingenabled, true);
+        linkbydefault = _get(p.linkbydefault, false);
+        addlinkcallback = p.addlinkcallback;
 
         force = d3.layout.force()
             .size([width, height])
@@ -109,6 +120,7 @@ var Canvas = (function() {
             .on("click", click);
         
         svg.append("rect")
+            .attr("id", "#" + id + "-rect")
             .attr("width", width)
             .attr("height", height);
         
@@ -180,6 +192,9 @@ var Canvas = (function() {
         log.debug("Canvas(" + width + "," + height + ") initialized");
     }
 
+    function _get(value, defaultvalue) {
+        return value !== undefined? value : defaultvalue;
+    }
 
     function mousemove() {
         if(!linking) {
@@ -190,12 +205,11 @@ var Canvas = (function() {
             mousey = d3.mouse(this)[1];
             
         // update drag line
+        drag_line.classed('hidden', false);
         drag_line.attr(
             'd', 
             'M' + srcnode.x + ',' + srcnode.y + 'L' + mousex + ',' + mousey
         );
-    
-        restart();
     }
     
     
@@ -203,11 +217,8 @@ var Canvas = (function() {
     
         log.debug("mousedown " + "d3node="+d3node.label + " d=" + d);
         if (d3.event.shiftKey) {
-            drag_line.classed("hidden", false);
-                // .attr('d', 'M' + d.x + ',' + d.y + 'L' + d.x + ',' + d.y);
             return;
         }
-        // restart();  
     }
     
     
@@ -219,7 +230,7 @@ var Canvas = (function() {
         
         if (linking && d3node !== srcnode) {
             
-            addlink(srcnode, d3node);
+            linknodes(srcnode, d3node);
             drag_line.classed("hidden", true);
             restart();
         }
@@ -232,23 +243,20 @@ var Canvas = (function() {
     
     
     function click() {
-        /*
-         * Couldn't manage to defaultPrevent on linking.
-         */
-        if (d3.event.defaultPrevented) {
-            log.debug("click prevented");
-            linking = false;
-            return; // click suppressed
-        }
         log.debug("click");
     }
     
     
     function dragstart(selected) {
         var e = d3.event.sourceEvent;
-    
-        if(e.shiftKey || e.ctrlKey) {
-            linking = true;
+        var modpressed = (e.shiftKey || e.ctrlKey);
+        linking = linkingenabled && 
+            ((linkbydefault && !modpressed) || (!linkbydefault && modpressed));
+            
+        var mousex = d3.mouse(this)[0],
+            mousey = d3.mouse(this)[1];
+
+        if(linking) {
             srcnode = selected;
             log.debug('linkstart - srcnode = ' + selected.label);
             return;
@@ -282,6 +290,7 @@ var Canvas = (function() {
         if(linking) {
             log.debug("dragend - linking");
             srcnode = undefined;
+            drag_line.classed("hidden", true);
             linking = false;
             /*
              * firefox does not enter click when linking, so reset is done
@@ -291,29 +300,14 @@ var Canvas = (function() {
         else {
             log.debug("dragend - moving");
         }
-    
     }
     
     
     function keydown() {
-        
-        var e = d3.event;
-        
-        // if (e.keyCode === 17) {
-            // node
-                // .on('mousedown.drag', null)
-                // .on('touchstart.drag', null);
-            // linking = true;
-        // }
     }
     
     
     function keyup() {
-        var e = d3.event;
-        
-        if (e.keyCode === 17) {
-            // node.call(force.drag);
-        }
     }
     
     
@@ -460,6 +454,11 @@ var Canvas = (function() {
 
         newnodes.call(force.drag);
     
+        d3_nodes.each(function(d, i) {
+            var g_node = g_nodes[i];
+            g_node.update(this, i);
+        });
+        
         /*
          * remove old nodes
          */
@@ -480,12 +479,26 @@ var Canvas = (function() {
         log.info("Adding node " + node.toString());
         g_nodes.push(node);
     }
-    
-    function addlink(source, target) {
+
+    function addlink(link) {
+        log.info("Adding link " + link.toString());
+        
+        if (addlinkcallback !== undefined) {
+            link = addlinkcallback(link);
+        }
+        
+        if (link) {
+            links.push(link);
+        }
+    }
+     
+    function linknodes(source, target) {
         log.info("Adding link{source=" + source.label + 
             " target=" + target.label + "}");
         var newlink = Object.create(Graph.Link).setup(source, target);
-        links.push(newlink);
+        addlink(newlink);
+        
+        return newlink;
     }
     
     function _remove(array, filter) {
@@ -523,6 +536,66 @@ var Canvas = (function() {
         restart();
     }
     
+    var tojson = function() {
+        var result = {
+            nodes: [],
+            links: [],
+        };
+        for (var i = 0; i < g_nodes.length; i++) {
+            var node = g_nodes[i].toJson();
+            result.nodes.push(node);
+        }
+        for (var i = 0; i < links.length; i++) {
+            var link = links[i].toJson();
+            result.links.push(link);
+        }
+        return result;
+    };
+
+    var fromjson = function(json, typeMap) {
+        var nodes = [];
+        var nodesmap = {};
+        var links = [];
+        for (var i = 0; i < json.nodes.length; i++) {
+            var jsonnode = json.nodes[i];
+            var node = nodefromjson(jsonnode, typeMap);
+            this.addnode(node);
+            nodesmap[node.name] = node;
+        }
+
+        for (var i = 0; i < json.links.length; i++) {
+            var jsonlink = json.links[i];
+            var link = linkfromjson(jsonlink, nodesmap);
+            this.addlink(link);
+        }
+    };
+    
+    var nodefromjson = function(json, typeMap) {
+        var prototype = typeMap[json.type];
+        var node = Object.create(prototype);
+        node.setup(json.name, json.label, json.type);
+        node.properties = json.properties;
+        
+        return node;
+    };
+    
+    var linkfromjson = function(json, nodeMap) {
+        var link = Object.create(Graph.Link);
+        var source = nodeMap[json.source];
+        var target = nodeMap[json.target];
+        
+        if (source === undefined) {
+            log.error("Node[name=" + json.source + "] not found");
+        }
+        if (target === undefined) {
+            log.error("Node[name=" + json.target + "] not found");
+        }
+        link.setup(source, target);
+        link.properties = json.properties;
+        
+        return link;
+    };
+     
     return {
         init: init,
         restart: restart,
@@ -530,7 +603,10 @@ var Canvas = (function() {
         getlink: getlink,
         addnode: addnode,
         addlink: addlink,
+        linknodes: linknodes,
         removenode: removenode,
         removelink: removelink,
+        tojson: tojson,
+        fromjson: fromjson,
     };
 });

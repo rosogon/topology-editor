@@ -34,7 +34,8 @@
  * @author roman.sosa@atos.net
  */
 var Forms = (function() {
-    var log = Log.getLogger("Forms").setLevel(Log.DEBUG);
+    var DURATION = 200;
+    
     /*
      * Create node form. 
      * It requires a wrapping div with an id attribute.

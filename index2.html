@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<head>
+<title>Toy</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="css/canvas.css"/>
+<link rel="stylesheet" href="css/bootstrap.min.css"/>
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+<!--<link rel="stylesheet" href="css/font-awesome.min.css"/>-->
+<link rel="stylesheet" href="css/editor.css"/>
+</head>
+
+<body>
+
+
+<div id="canvas">
+</div>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/d3.min.js"></script>
+<script src="js/loglevel.js"></script>
+<script src="js/editor/graph.js"></script>
+<script src="js/editor/canvas.js"></script>
+<script>
+
+var n0;
+var canvas = Canvas();
+
+$(document).ready(function() {
+    n0 = Object.create(Graph.Node);
+    canvas.init("canvas", {
+        linkingenabled : true,
+        linkbydefault : true
+    });
+    canvas.addnode(n0);
+    canvas.restart();
+    
+    $("#canvas").click(function(event) {
+        if (event.target.id == "#canvas-rect") {
+            var n = Object.create(Graph.Node);
+            canvas.addnode(n);
+            canvas.restart();
+        }
+    });
+});
+
+</script>

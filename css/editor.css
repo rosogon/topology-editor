@@ -1,3 +1,11 @@
 fieldset legend {
     font-size: 16px;
 }
+
+circle.node.running {
+    fill: #00ff00;
+}
+
+circle.node.onfire{
+    fill: #ff0000;
+}

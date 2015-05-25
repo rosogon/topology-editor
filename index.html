@@ -174,12 +174,72 @@
 <script type="text/javascript" src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/d3.min.js"></script>
+<script src="js/loglevel.js"></script>
 <script src="js/editor/log.js"></script>
 <script src="js/editor/graph.js"></script>
 <script src="js/editor/canvas.js"></script>
+<script src="js/editor/types.js"></script>
 <script src="js/editor/forms.js"></script>
 <script src="js/editor/editor.js"></script>
 <script>
+
+var n0, n1, n2, c0, c1;
+var canvas = Canvas();
+
+$(document).ready(function() {
+    n0 = Object.create(Types.WebApplication).init({
+        name: "PHP Node", 
+        label: "PHP",
+        properties : { language: "PHP"},
+    });
+    n0.status = "running";
+
+    n1 = Object.create(Types.RestService).init({ 
+        name: "Rest Component", 
+        label : "rest1",
+        properties : { language : "JAVA" }
+    });
+
+    n2 = Object.create(Types.Database).init({
+        name : "Database1",
+        label : "db1",
+        properties : { category : "mysql" }
+    });
+    
+    c0 = Object.create(Types.Cloud).init({
+        name : "CloudFoundry Pivotal",
+        label : "CF"
+    });
+    
+    c1 = Object.create(Types.Cloud).init({
+        name : "Heroku", 
+        label : "Heroku"
+    });
+
+    canvas.init("canvas", {
+        addlinkcallback : function(link) {
+            log.debug(link);
+            return link;
+        }
+    });
+    canvas.addnode(n0);
+    canvas.addnode(n1);
+    canvas.addnode(n2);
+    canvas.addnode(c0);
+    canvas.addnode(c1);
+    canvas.linknodes(n0, n1);
+    canvas.linknodes(n1, n2);
+    canvas.linknodes(n1, c0);
+    canvas.linknodes(n0, c0);
+    canvas.linknodes(n2, c1);
+    n0.qos = [
+        { "metric": "runtime", "operator": "LT", "threshold": 2000 },
+        { "metric": "availability", "operator": "GT", "threshold": 99.9 }
+    ];
+    n0.versions = [ 5.3, 5.4, 5.5 ];
+    Editor.init(canvas);
+    canvas.restart();
+});
 
 </script>
 

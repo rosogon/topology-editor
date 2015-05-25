@@ -25,6 +25,7 @@ var Graph = (function () {
     var Link = {
         source: undefined,
         target: undefined,
+        properties: {},
         setup: function(source, target) {
             this.source = source;
             this.target = target;
@@ -35,15 +36,37 @@ var Graph = (function () {
                 this.source.label,
                 this.target.label
             );
+        },
+        toJson: function(args) {
+            return {
+                source: this.source.name,
+                target: this.target.name,
+                properties: this.properties,
+            };
         }
+    
     };
     
-
     var Node = {
-        setup: function(name, label) {
-            this.name = name;
-            this.label = label;
-            this.type = "Node";
+        name: "",
+        label: "",
+        type: "Node",
+        properties: {},
+        // setup: function(name, label, type) {
+            // this.name = name;
+            // this.label = label !== undefined? label : name;
+            // if (type !== undefined) {
+                // this.type = type;
+            // }
+            // return this;
+        // },
+        init: function(values) {
+            for (var key in values) {
+                var value = values[key];
+                
+                this[key] = value;
+            }
+            return this;
         },
         toString: function(args) {
             return format(
@@ -53,71 +76,20 @@ var Graph = (function () {
                 this.type
             );
         },
+        toJson: function(args) {
+            return {
+                name: this.name,
+                label: this.label,
+                type: this.type,
+                properties: this.properties,
+            };
+        }
     };
-    
-    var Database = Object.create(Node);
-    
-    Database.init = function(name, label, category) {
-        this.setup(name, label);
-        this.type = "Database";
-        this.category = category;
-    
-        return this;
-    };
-    
-    Database.toString = function() {
-        return format(
-            "Database(name='{}', label='{}', category='{}')", 
-            this.name, 
-            this.label,
-            this.category
-        );
-    };
-    
-    var WebApplication = Object.create(Node);
-    
-    WebApplication.init = function(name, label, language) {
-        this.setup(name, label);
-        this.type = "WebApplication";
-        this.language = language;
-    
-        return this;
-    };
-    
-    WebApplication.toString = function() {
-        return format(
-            "WebApplication(name='{}', label='{}', language='{}')",
-            this.name,
-            this.label,
-            this.language
-        );
-    };
-    
-    var RestService = Object.create(Node);
-    
-    RestService.init = function(name, label, language) {
-        this.setup(name, label);
-        this.type = "RestService";
-        this.language = language;
-    
-        return this;
-    };
-    
-    RestService.toString = function() {
-        return format(
-            "RestService(name='{}', label='{}', language='{}')",
-            this.name,
-            this.label,
-            this.language
-        );
-    };
-    
+
     return {
         Link: Link,
         Node: Node,
         Graph: Graph,
-        WebApplication: WebApplication,
-        Database: Database,
-        RestService: RestService,
+        format: format,
     };
 })();
