@@ -51,6 +51,36 @@ var Types = function() {
     });
     
 
+    var NoSql = Object.create(Graph.Node).init({
+        name : "NoSQL Database",
+        label : "NoSQL",
+        type : "NoSQL",
+    });
+    
+    var ApplicationServer = Object.create(Graph.Node).init({
+        name : "Application Server",
+        label : "AS",
+        type : "ApplicationServer"
+    });
+    
+    var Tomcat = Object.create(ApplicationServer).init({
+        name : "Tomcat",
+        label : "Tomcat",
+        type : "Tomcat"
+    });
+    
+    var Apache = Object.create(ApplicationServer).init({
+        name : "Apache",
+        label : "Apache",
+        type : "Apache"
+    });
+    
+    var Nginx = Object.create(ApplicationServer).init({
+        name : "Nginx",
+        label : "Nginx",
+        type : "Nginx"
+    });
+    
     var Cloud = Object.create(Graph.Node).init({
         name : "Cloud",
         label : "Cloud",
@@ -63,6 +93,11 @@ var Types = function() {
         WebApplication: WebApplication,
         Database: Database,
         RestService: RestService,
-        Cloud: Cloud
+        NoSql : NoSql,
+        Cloud: Cloud,
+        ApplicationServer,
+        Tomcat, 
+        Apache,
+        Nginx
     };
 }();

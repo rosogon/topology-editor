@@ -1,10 +1,25 @@
 /**
  * This is a proof of concept of topology editor using Graph.Node objects.
  * 
- * It requires an element with id "canvas" in the document.
+ * Nodes and links can be added to the canvas.
+ * Nodes can be moved. Nodes can be linked with other nodes.
+ * The action to trigger when dragging a node (move or link) depends on 
+ * an init parameter, and can be modified while pressing a mod key (shift, ctrl)
  * 
- * To initialize the canvas: Canvas.init(width, height)
- * If no parameters are provided, it defaults to WIDTH, HEIGHT
+ * To initialize the canvas: Canvas.init(id, parameters). See below for a 
+ * description of parameters.
+ * 
+ * Example:
+ *    c = Canvas()
+ *    canvas.init("canvas", {
+ *       width: 400,
+ *       height: 400,
+ *       linkbydefault: true,
+ *       addlinkcallback : function(link) {
+ *           log.debug(link);
+ *           return link;
+ *       }
+ *   });
  * 
  * To update the canvas when nodes are added/modified/removed: Canvas.restart()
  * 
@@ -74,26 +89,37 @@ var Canvas = (function() {
         HEIGHT = 500;
         
     var NODE_RADIUS = 20;
+
+    /*
+     * These variables store parameter values
+     */
+    var
+        width,              /* canvas width. default: WIDTH */
+        height,             /* canvas height. default: HEIGHT */
+        linkingenabled,     /* set to false for a RO canvas. def:true */
+        linkbydefault,      /* default mode: T: links; F: drag node. def: F 
+                             * Press mod keys to swith mode.*/
+        addlinkcallback;    /* callback to control link to add */
         
     /*
      * All these variables are initialized in init()
      */
     
-    var force,                      /* d3 layout force */
-        svg,                        /* svg element to add to div id="canvas" */
-        drag_line,                  /* line that appears when linking */
-        g_nodes,                    /* array of Graph.Nodes */
-        links,                      /* array of links between nodes */
-        d3_links,                   /* d3 selection of links */
-        d3_nodes,                   /* d3 selection of nodes */
-        srcnode,                    /* source node when linking */
-        linkingenabled,             /* set to false in init for a RO canvas */
-        linking,                    /* true if linking */
-        linkbydefault,
-        addlinkcallback,
-        drag;                       /* d3 drag (used for dragging nodes) */
+    var self,
+        force,              /* d3 layout force */
+        svg,                /* svg element to add to div id="canvas" */
+        drag_line,          /* line that appears when linking */
+        g_nodes,            /* array of Graph.Nodes */
+        links,              /* array of links between nodes */
+        d3_links,           /* d3 selection of links */
+        d3_nodes,           /* d3 selection of nodes */
+        srcnode,            /* source node when linking */
+        linking,            /* true if linking */
+        drag;               /* d3 drag (used for dragging nodes) */
 
     function init(id, parameters) {
+        
+        self = this;
         
         var p = parameters || {};
         
@@ -229,8 +255,17 @@ var Canvas = (function() {
         log.debug("mouseup " + "d3node="+d3node.label + " d=" + d);
         
         if (linking && d3node !== srcnode) {
-            
-            linknodes(srcnode, d3node);
+            var targetnode = d3node;
+            var link = Object.create(Graph.Link).setup(srcnode, targetnode);
+            if (addlinkcallback !== undefined) {
+                addlinkcallback(self, link, function() {
+                    self.addlink(link);
+                    self.restart();
+                });
+            }
+            else {
+                addlink(link);
+            }
             drag_line.classed("hidden", true);
             restart();
         }
@@ -344,14 +379,16 @@ var Canvas = (function() {
         var newlinks = d3_links.enter().append("svg:path");
         
         newlinks
-            .attr("class", "link")
+            .attr("class", function(l) { return "link " + (l.type || "");})
             .style("marker-end", "url(#end-arrow)");
-            
+
         newlinks.attr("data-popover", "true").each(function(d, i) {
             $(this).popover(
                 {
                     'container' : 'body',
+                    'placement' : 'auto right',
                     'title'     : function() { return d.popovertitle(i); },
+                    'content'   : function() { return d.popovercontent(i); },
                     'html'      : true,
                     'trigger'   : 'manual'
                 }
@@ -467,12 +504,27 @@ var Canvas = (function() {
         force.start();
     }
 
-    function getnode(id) {
-        return g_nodes[id];
+    function getnode(idx) {
+        return g_nodes[idx];
     }
+    
+    
+    function getnodebyname(name) {
+        return _search(g_nodes, function(node) {
+            node.name === name;
+        });
+    }
+    
     
     function getlink(id) {
         return links[id];
+    }
+    
+    
+    function getlinkbynodes(source, target) {
+        return _search(links, function(link) {
+            return link.source === source && link.target === target;
+        });
     }
     
     function addnode(node) {
@@ -483,23 +535,32 @@ var Canvas = (function() {
     function addlink(link) {
         log.info("Adding link " + link.toString());
         
-        if (addlinkcallback !== undefined) {
-            link = addlinkcallback(link);
-        }
-        
         if (link) {
             links.push(link);
         }
     }
      
-    function linknodes(source, target) {
+    function linknodes(source, target, type) {
         log.info("Adding link{source=" + source.label + 
             " target=" + target.label + "}");
         var newlink = Object.create(Graph.Link).setup(source, target);
+        newlink.type = type;
         addlink(newlink);
         
         return newlink;
     }
+    
+    
+    function _search(array, filter) {
+        for (var i = 0; i < array.length; i++) {
+            var item = array[i];
+            
+            if (filter(item)) {
+                return item;
+            }
+        }
+    }
+    
     
     function _remove(array, filter) {
         for (var i = 0; i < array.length; ) {
@@ -600,7 +661,9 @@ var Canvas = (function() {
         init: init,
         restart: restart,
         getnode: getnode,
+        getnodebyname: getnodebyname,
         getlink: getlink,
+        getlinkbynodes: getlinkbynodes,
         addnode: addnode,
         addlink: addlink,
         linknodes: linknodes,

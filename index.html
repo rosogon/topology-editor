@@ -167,6 +167,62 @@
   </div>
 </div>
     
+<div class="modal fade" id="update-link-form">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+        </button>
+        <h4 class="modal-title">Update link</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <fieldset id="set-operations">
+              <legend>Description</legend>
+              <div class="form-group">
+                  <label for="link-operations">Operations</label>
+                  <table class="table table-bordered" id="link-operations">
+                      <thead>
+                          <tr>
+                              <th>Source operation
+                              <th>Target operation
+                              <th># Calls 
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td>
+                                  <input type="text" class="form-control" name="source-operation-name">
+                              <td>
+                                  <input type="text" class="form-control" name="target-operation-name">
+                              <td>
+                                  <input type="text" class="form-control" name="operation-calls">
+                              <td>
+                                  <button type="button" data-action="delete"><i class="fa fa-remove"> </i></button>
+                          </tr>
+                      </tbody>
+                      <tfoot>
+                          <tr>
+                              <td>
+                              <td>
+                              <td>
+                              <td><button type="button" id="links-operations-add" data-action="add"><span class="fa fa-plus"> </span></button>
+                          </tr>
+                      </tfoot>
+                  </table>
+              </div>
+          </fieldset>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="link-update" type="button" class="btn btn-primary">Update</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="canvas">
 </div>
@@ -183,7 +239,7 @@
 <script src="js/editor/editor.js"></script>
 <script>
 
-var n0, n1, n2, c0, c1;
+var n0, n1, n2, n3, c0, c1;
 var canvas = Canvas();
 
 $(document).ready(function() {
@@ -192,7 +248,7 @@ $(document).ready(function() {
         label: "PHP",
         properties : { language: "PHP"},
     });
-    n0.status = "running";
+    // n0.status = "running";
 
     n1 = Object.create(Types.RestService).init({ 
         name: "Rest Component", 
@@ -206,6 +262,11 @@ $(document).ready(function() {
         properties : { category : "mysql" }
     });
     
+    n3 = Object.create(Types.NoSql).init({
+        name : "Database2",
+        label : "db2",
+    });
+
     c0 = Object.create(Types.Cloud).init({
         name : "CloudFoundry Pivotal",
         label : "CF"
@@ -215,23 +276,32 @@ $(document).ready(function() {
         name : "Heroku", 
         label : "Heroku"
     });
+    
+    as0 = Object.create(Types.ApplicationServer).init({
+        name : "as0",
+        label : "as0",
+    });
+    as1 = Object.create(Types.Tomcat).init({
+        name : "as1",
+        label : "as1"
+    });
 
     canvas.init("canvas", {
-        addlinkcallback : function(link) {
-            log.debug(link);
-            return link;
-        }
+        addlinkcallback : Editor.addlinkcallback
     });
     canvas.addnode(n0);
     canvas.addnode(n1);
     canvas.addnode(n2);
+    canvas.addnode(n3);
     canvas.addnode(c0);
     canvas.addnode(c1);
+    canvas.addnode(as0);
+    canvas.addnode(as1);
     canvas.linknodes(n0, n1);
     canvas.linknodes(n1, n2);
-    canvas.linknodes(n1, c0);
-    canvas.linknodes(n0, c0);
-    canvas.linknodes(n2, c1);
+    canvas.linknodes(n1, c0, "hostedon");
+    canvas.linknodes(n0, c0, "hostedon");
+    canvas.linknodes(n2, c1, "hostedon");
     n0.qos = [
         { "metric": "runtime", "operator": "LT", "threshold": 2000 },
         { "metric": "availability", "operator": "GT", "threshold": 99.9 }

@@ -62,6 +62,7 @@ var Forms = (function() {
             this.$title = this.$div.find(".modal-title");
             
             this.node = undefined;
+            this.acceptcallback = undefined;
             return this;
         },
         reset: function() {
@@ -84,7 +85,8 @@ var Forms = (function() {
             this.$title.text(this.title);
             this.$div.modal();
         },
-        show: function() {
+        show: function(acceptcallback) {
+            this.acceptcallback = acceptcallback;
             this.show_impl();
         },
         hide: function() {
@@ -98,10 +100,11 @@ var Forms = (function() {
             log.info( (isnewnode? "Add" : "Edit") + " node " + node.toString());
             $.map(this.fieldsets, function(set) { set.store(node); });
             
-            if (isnewnode) {
-                Canvas.addnode(node);
-            }
-            Canvas.restart();
+            this.acceptcallback(node);
+            // if (isnewnode) {
+                // Canvas.addnode(node);
+            // }
+            // Canvas.restart();
             this.node = undefined;
         },
         createnode: function() {
@@ -110,7 +113,9 @@ var Forms = (function() {
         
             var isnewnode = (this.node === undefined);
             var n = isnewnode? 
-                Object.create(this.nodeprototype).init(name, label):
+                Object.create(this.nodeprototype).init({
+                    name: name, 
+                    label: label}):
                 this.node;
             this.ok_impl(n, isnewnode);    
         }

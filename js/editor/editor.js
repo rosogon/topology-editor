@@ -27,6 +27,7 @@ var Editor = (function() {
     };
     
     var language_version_options = {
+        "": [ "" ], 
         "JAVA": [ 4, 5, 6, 7, 8],
         "PYTHON": [2, 3],
         "RUBY": [1, 2],
@@ -83,10 +84,18 @@ var Editor = (function() {
     
     Graph.Link.popovertitle = function(i) {
         return " " + 
+            '<button type="button" class="popover-edit" data-action="edit" data-linkindex="' + i + '">' + 
+            '<span aria-hidden="true" class="fa fa-edit"></span></button>' +
             '<button type="button" class="popover-edit" data-action="delete" data-linkindex="' + i + '">' + 
             '<span aria-hidden="true" class="fa fa-remove"></span></button>';
     };
     
+    Graph.Link.popovercontent = function(i) {
+        
+        var content = "";
+        content += item("operations", this.properties.operations);
+        return "<dl>" + content + "</dl>";
+    };
     
     Graph.Node.popovertitle = function(i) {
         return this.name + "&nbsp;&nbsp;&nbsp;" +
@@ -97,32 +106,6 @@ var Editor = (function() {
     };
     
     Graph.Node.popovercontent = function(i) {
-        function item(key, value) {
-            var result = "";
-            if (value !== undefined && value !== "") {
-                if (Array.isArray(value)) {
-                    aux = "<ul>";
-                    for (var i = 0; i < value.length; i++) {
-                        o = value[i];
-                        aux += "<li>";
-                        if (key == "QoS") {
-                            aux += o.metric + " " + o.operator + " " + o.threshold;
-                        }
-                        else {
-                            aux += JSON.stringify(value[i]);
-                        }
-                    }
-                    aux += "</ul>";
-                    value = aux;
-                }
-                else if (typeof(value) == "object") {
-                    value = JSON.stringify(value);
-                }
-                result = "<dt>" + key + "</dt><dd>" + value + "</dd>";
-            }
-            return result;
-        };
-    
         var location = this.location;
         if (location !== undefined && location !== "") {
             location = location + " - " + this.location_option;
@@ -149,10 +132,45 @@ var Editor = (function() {
         return "<dl>" + content + "</dl>";
     };
     
+    function item(key, value) {
+        var result = "";
+        if (value !== undefined && value !== "") {
+            if (Array.isArray(value)) {
+                aux = "<ul>";
+                for (var i = 0; i < value.length; i++) {
+                    o = value[i];
+                    aux += "<li>";
+                    if (key == "QoS") {
+                        aux += o.metric + " " + o.operator + " " + o.threshold;
+                    }
+                    else if (key == "operations") {
+                        aux += o["source-operation-name"] + "->" 
+                            + o["target-operation-name"] 
+                            + ": " + o["operation-calls"] + " calls";
+                    }
+                    else {
+                        aux += JSON.stringify(value[i]);
+                    }
+                }
+                aux += "</ul>";
+                value = aux;
+            }
+            else if (typeof(value) == "object") {
+                value = JSON.stringify(value);
+            }
+            result = "<dt>" + key + "</dt><dd>" + value + "</dd>";
+        }
+        return result;
+    };
+
+
     
     function init(canvas) {
         this.canvas = canvas;
 
+        /*
+         * Edit/Delete node
+         */
         $('body').on('click', '.popover button[data-nodeindex]', function () {
             var index = this.getAttribute("data-nodeindex");
             
@@ -178,13 +196,18 @@ var Editor = (function() {
                 activeform = buttonform_map[node.type];
                 activeform.reset();
                 activeform.load(node);
-                activeform.show();
+                activeform.show(function(node) {
+                    canvas.restart();
+                });
             }
             else if (action == "delete") {
                 canvas.removenode(node);
             }
         });
         
+        /*
+         * Edit/delete link
+         */
         $('body').on('click', '.popover button[data-linkindex]', function () {
             var index = this.getAttribute("data-linkindex");
             
@@ -206,21 +229,85 @@ var Editor = (function() {
             if (action == "delete") {
                 canvas.removelink(link);
             }
+            else if (action == "edit") {
+                activeform = linkform;
+                activeform.reset();
+                activeform.load(link);
+                activeform.show(function(editlink) {
+                    canvas.restart();
+                });
+            }
         });
+
+        /*
+         * Main "Add..." button behaviour
+         */
+        $("#add-buttons a").on("click", function() {
+            var datatype = this.getAttribute("data-type");
+            if (datatype === undefined) {
+                log.warn("Button " + this.id + " does not have data-type attribute");
+            }
+    
+            /* 
+             * Hide popovers TODO: Change
+             */
+            $("[aria-describedby]").popover('hide');
+            
+            activeform = buttonform_map[datatype];
+            activeform.reset();
+            activeform.show(function(node) {
+                canvas.addnode(node);
+                canvas.restart();
+            });
+        });
+        
+        /*
+         * In form "Create node" button behaviour (assigned externally because
+         * button is shared among forms).
+         */
+        $("div.modal-footer button.btn-primary").on("click", function() {
+            activeform.hide();
+            activeform.createnode();
+            activeform = undefined;
+        });
+        
     }    
     
+    
+    function addlinkcallback(canvas, link, accept) {
+        /*
+         * check if is a valid link 
+         */
+        if (canvas.getlinkbynodes(link.source, link.target) ||
+            canvas.getlinkbynodes(link.target, link.source) ||
+            link.source.type === Types.Database.type || 
+            link.target.type === Types.Cloud.type) {
+            return undefined;
+        }
+        activeform = linkform;
+        activeform.reset();
+        activeform.load(link);
+
+        activeform.show(function(editlink) {
+            accept();
+        });
+    }
+    
     var qos_table;
+    var link_operations_table;
     
     var activeform = undefined;
     var webappform = Object.create(Forms.Form);
     var databaseform = Object.create(Forms.Form);
     var restform = Object.create(Forms.Form);
+    var linkform = Object.create(Forms.Form);
     
     var commonset = Object.create(Forms.Fieldset);
     var codetechset = Object.create(Forms.Fieldset);
     var databasetechset = Object.create(Forms.Fieldset);
     var nonfunctionalset = Object.create(Forms.Fieldset);
-    var infrastructureset = Object.create(Forms.Fieldset); 
+    var infrastructureset = Object.create(Forms.Fieldset);
+    var operationsset = Object.create(Forms.Fieldset);
 
     var buttonform_map;
 
@@ -235,53 +322,53 @@ var Editor = (function() {
     };
     
     codetechset.load = function(node) {
-        $("#code-language").val(node.language);
-        $("#code-artifact").val(node.artifact);
+        $("#code-language").val(node.properties.language);
+        $("#code-artifact").val(node.properties.artifact);
         Forms.populate_select_from_array(
             $('#code-version'),
-            language_version_options[node.language]
+            language_version_options[node.properties.language] || ""
         );
-        $("#code-version").val(node.versions);
+        $("#code-version").val(node.properties.versions);
     };
     
     codetechset.store = function(node) {
-        node.language = $("#code-language").val();
-        node.artifact = $("#code-artifact").val();
-        node.versions = $("#code-version").val();
+        node.properties.language = $("#code-language").val();
+        node.properties.artifact = $("#code-artifact").val();
+        node.properties.versions = $("#code-version").val();
     };
     
     databasetechset.load = function(node) {
-        $("#database-category").val(node.category);
-        $("#database-artifact").val(node.artifact);
+        $("#database-category").val(node.properties.category);
+        $("#database-artifact").val(node.properties.artifact);
     };
     
     databasetechset.store = function(node) {
-        node.category = $("#database-category").val();
-        node.artifact = $("#database-artifact").val();
+        node.properties.category = $("#database-category").val();
+        node.properties.artifact = $("#database-artifact").val();
     };
     
     nonfunctionalset.load = function(node) {
-        $("#nf-cost").val(node.cost);
-        this.radioval("nf-location", node.location);
+        $("#nf-cost").val(node.properties.cost);
+        this.radioval("nf-location", node.properties.location);
         if(node.location == LOCATION_STATIC) {
-            $("#nf-location-static-options").val(node.location_option);
+            $("#nf-location-static-options").val(node.properties.location_option);
         }
         else if (node.location == LOCATION_DYNAMIC) {
-            $("#nf-location-dynamic-options").val(node.location_option);
+            $("#nf-location-dynamic-options").val(node.properties.location_option);
         }
-        qos_table.load(node.qos);
+        qos_table.load(node.properties.qos);
     };
     
     nonfunctionalset.store = function(node) {
-        node.cost = $("#nf-cost").val();
-        node.location = this.getlocation();
-        if (node.location == LOCATION_STATIC) {
-            node.location_option = $("#nf-location-static-options").val();
+        node.properties.cost = $("#nf-cost").val();
+        node.properties.location = this.getlocation();
+        if (node.properties.location == LOCATION_STATIC) {
+            node.properties.location_option = $("#nf-location-static-options").val();
         }
         else if (node.location == LOCATION_DYNAMIC) {
-            node.location_option = $("#nf-location-dynamic-options").val();
+            node.properties.location_option = $("#nf-location-dynamic-options").val();
         }
-        node.qos = qos_table.serialize();
+        node.properties.qos = qos_table.serialize();
     };
     
     nonfunctionalset.expand = function(toexpand) {
@@ -312,7 +399,7 @@ var Editor = (function() {
         var locationvalue = this.getlocation();
         log.debug("showlocation(" + toanimate + ") - locationvalue = " + locationvalue);
         
-        var duration = toanimate? DURATION : 0;
+        var duration = toanimate? Forms.DURATION : 0;
         
         var togglelocation = function ($item, toshow) {
             if (toshow) {
@@ -333,11 +420,19 @@ var Editor = (function() {
     };
     
     infrastructureset.store = function(node) {
-        node.infrastructure = this.radioval("infrastructure");
+        node.properties.infrastructure = this.radioval("infrastructure");
     };
     
     infrastructureset.load = function(node) {
-        this.radioval("infrastructure", node.infrastructure);
+        this.radioval("infrastructure", node.properties.infrastructure);
+    };
+    
+    operationsset.load = function(link) {
+        link_operations_table.load(link.properties.operations);
+    };
+    
+    operationsset.store = function(link) {
+        link.properties.operations = link_operations_table.serialize();
     };
     
     $(document).ready(function() {
@@ -361,9 +456,11 @@ var Editor = (function() {
         databasetechset.setup("set-database-tech");
         nonfunctionalset.setup("set-nonfunctional");
         infrastructureset.setup("set-infrastructure");
+        operationsset.setup("set-operations");
     
         qos_table = Object.create(Forms.DynamicTable).setup("nf-qos");
-        
+        link_operations_table = Object.create(Forms.DynamicTable)
+            .setup("link-operations");
         /*
          * Initialize forms
          */
@@ -388,6 +485,13 @@ var Editor = (function() {
             [commonset, codetechset, nonfunctionalset, infrastructureset],
             ["set-common", "set-code-tech", "set-nonfunctional", "set-infrastructure"]);
         
+        linkform.setup(
+            Graph.Link,
+            document.getElementById("update-link-form"),
+            "Link",
+            [operationsset],
+            ["set-operations"]
+        );
         buttonform_map = {
             "add-webapplication": webappform,
             "add-database": databaseform,
@@ -397,35 +501,6 @@ var Editor = (function() {
             "RestService": restform,
         };
     
-        /*
-         * Main "Add..." button behaviour
-         */
-        $("#add-buttons a").on("click", function() {
-            var datatype = this.getAttribute("data-type");
-            if (datatype === undefined) {
-                log.warn("Button " + this.id + " does not have data-type attribute");
-            }
-    
-            /* 
-             * Hide popovers TODO: Change
-             */
-            $("[aria-describedby]").popover('hide');
-            
-            activeform = buttonform_map[datatype];
-            activeform.reset();
-            activeform.show();
-        });
-        
-        /*
-         * In form "Create node" button behaviour (assigned externally because
-         * button is shared among forms).
-         */
-        $("div.modal-footer button.btn-primary").on("click", function() {
-            activeform.hide();
-            activeform.createnode();
-            activeform = undefined;
-        });
-        
         /*
          * Additional behaviour
          */
@@ -443,6 +518,7 @@ var Editor = (function() {
 
     return {
         init : init,
+        addlinkcallback: addlinkcallback
         // fromJson: fromJson,
     };
 })();

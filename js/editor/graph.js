@@ -1,8 +1,15 @@
 /**
  * Node objects
  * 
- * var d1 = Object.create(Graph.Database).init("NAME", "LABEL");
+ * var d1 = Object.create(Graph.Node).init({
+ *     name: "NAME",
+ *     label: "LABEL",
+ *     properties: { weight: 40 }
+ * });
  * console.log(d1.toString());
+ * 
+ * A simple json-serialization is implemented. The serialized values are:
+ * name, label, properties.
  * 
  * @author roman.sosa@atos.net
  */
@@ -25,10 +32,11 @@ var Graph = (function () {
     var Link = {
         source: undefined,
         target: undefined,
-        properties: {},
+        properties: undefined,
         setup: function(source, target) {
             this.source = source;
             this.target = target;
+            this.properties = {};
             return this;
         },
         toString: function() {
@@ -48,19 +56,12 @@ var Graph = (function () {
     };
     
     var Node = {
-        name: "",
+        name: "<Node>",
         label: "",
         type: "Node",
-        properties: {},
-        // setup: function(name, label, type) {
-            // this.name = name;
-            // this.label = label !== undefined? label : name;
-            // if (type !== undefined) {
-                // this.type = type;
-            // }
-            // return this;
-        // },
+        properties: undefined,
         init: function(values) {
+            this.properties = {};
             for (var key in values) {
                 var value = values[key];
                 

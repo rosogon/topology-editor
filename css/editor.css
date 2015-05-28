@@ -9,3 +9,11 @@ circle.node.running {
 circle.node.onfire{
     fill: #ff0000;
 }
+
+circle.node.frontend {
+    stroke-width: 2px;
+}
+
+path.link.hostedon {
+    stroke-dasharray: 3, 3;
+}
