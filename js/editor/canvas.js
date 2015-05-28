@@ -614,9 +614,10 @@ var Canvas = (function() {
     };
 
     var fromjson = function(json, typeMap) {
+        g_nodes.length = 0;
+        links.length = 0;
         var nodes = [];
         var nodesmap = {};
-        var links = [];
         for (var i = 0; i < json.nodes.length; i++) {
             var jsonnode = json.nodes[i];
             var node = nodefromjson(jsonnode, typeMap);
@@ -634,7 +635,7 @@ var Canvas = (function() {
     var nodefromjson = function(json, typeMap) {
         var prototype = typeMap[json.type];
         var node = Object.create(prototype);
-        node.setup(json.name, json.label, json.type);
+        node.init( { name: json.name, label: json.label, type: json.type });
         node.properties = json.properties;
         
         return node;

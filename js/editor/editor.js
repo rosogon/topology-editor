@@ -435,6 +435,18 @@ var Editor = (function() {
         link.properties.operations = link_operations_table.serialize();
     };
     
+    fromjson = function(json) {
+        /*
+         * Autogenerate typemap
+         */
+        typemap = {};
+        for (var i in Types) {
+            typemap[i] =  Types[i];
+        }
+        
+        this.canvas.fromjson(json, typemap);
+    };
+    
     $(document).ready(function() {
         log.debug("ready");
         
@@ -518,7 +530,7 @@ var Editor = (function() {
 
     return {
         init : init,
-        addlinkcallback: addlinkcallback
-        // fromJson: fromJson,
+        addlinkcallback: addlinkcallback,
+        fromjson: fromjson,
     };
 })();
