@@ -9,6 +9,7 @@
  * 
  * @author roman.sosa@atos.net
  */
+"use strict";
 
 var Editor = (function() {
 
@@ -126,7 +127,7 @@ var Editor = (function() {
         
         var content = "";
         for (var i = 0; i < terms.length; i++) {
-            term = terms[i];
+            var term = terms[i];
             content += item(term[0], term[1]);
         }
         return "<dl>" + content + "</dl>";
@@ -136,9 +137,9 @@ var Editor = (function() {
         var result = "";
         if (value !== undefined && value !== "") {
             if (Array.isArray(value)) {
-                aux = "<ul>";
+                var aux = "<ul>";
                 for (var i = 0; i < value.length; i++) {
-                    o = value[i];
+                    var o = value[i];
                     aux += "<li>";
                     if (key == "QoS") {
                         aux += o.metric + " " + o.operator + " " + o.threshold;
@@ -435,7 +436,7 @@ var Editor = (function() {
         link.properties.operations = link_operations_table.serialize();
     };
     
-    fromjson = function(json) {
+    var fromjson = function(json) {
         /*
          * Autogenerate typemap
          */

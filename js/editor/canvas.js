@@ -53,6 +53,8 @@
  * listener.
  */
 
+"use strict";
+
 Graph.Link.popovertitle = function(i) {
     return "";
 };
@@ -374,7 +376,9 @@ var Canvas = (function() {
         /*
          * handle links
          */
-        d3_links = d3_links.data(links);
+        d3_links = d3_links.data(links, function(l) { 
+            return l.source.name + "-" + l.target.name; 
+        });
     
         var newlinks = d3_links.enter().append("svg:path");
         
@@ -387,8 +391,12 @@ var Canvas = (function() {
                 {
                     'container' : 'body',
                     'placement' : 'auto right',
-                    'title'     : function() { return d.popovertitle(i); },
-                    'content'   : function() { return d.popovercontent(i); },
+                    'title'     : function() { 
+                        return d.popovertitle(links.indexOf(d)); 
+                    },
+                    'content'   : function() { 
+                        return d.popovercontent(links.indexOf(d)); 
+                    },
                     'html'      : true,
                     'trigger'   : 'manual'
                 }
@@ -427,7 +435,7 @@ var Canvas = (function() {
          * TODO: Evaluate use second arg = function(d) { return d.name; }
          */
         var selection = svg.select("g.nodegroup").selectAll("g");
-        var data = selection.data(g_nodes);
+        var data = selection.data(g_nodes, function(n) { return n.name; });
         d3_nodes = data;
         
         data.select("text.nodelabel").text(function(d) { return d.label; });
@@ -453,8 +461,8 @@ var Canvas = (function() {
                 {
                     'container' : 'body',
                     'placement' : 'auto right',
-                    'title'     : function() { return d.popovertitle(i); },
-                    'content'   : function() { return d.popovercontent(i); },
+                    'title'     : function() { return d.popovertitle(d.index); },
+                    'content'   : function() { return d.popovercontent(d.index); },
                     'html'      : true,
                     'trigger'   : 'manual'
                 }
@@ -672,5 +680,7 @@ var Canvas = (function() {
         removelink: removelink,
         tojson: tojson,
         fromjson: fromjson,
+        nodes: function() { return g_nodes.slice(); },
+        links: function() { return links.slice(); }
     };
 });
