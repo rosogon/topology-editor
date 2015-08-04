@@ -109,6 +109,7 @@ var Canvas = (function() {
     
     var self,
         force,              /* d3 layout force */
+        div,                /* container div */
         svg,                /* svg element to add to div id="canvas" */
         drag_line,          /* line that appears when linking */
         g_nodes,            /* array of Graph.Nodes */
@@ -141,7 +142,8 @@ var Canvas = (function() {
         /*
          * Append svg to canvas
          */
-        svg = d3.select("#" + id).append("svg")
+        div = d3.select("#" + id);
+        svg = div.append("svg")
             .attr("width", width)
             .attr("height", height)
             .on("mousemove", mousemove)
@@ -214,8 +216,8 @@ var Canvas = (function() {
          */
         d3.select(window)
             .on('keydown', keydown)
-            .on('keyup', keyup);
-        
+            .on('keyup', keyup)
+            .on("resize", resize);
         restart();
         log.debug("Canvas(" + width + "," + height + ") initialized");
     }
@@ -369,7 +371,22 @@ var Canvas = (function() {
         return 'translate(' + d.x + ',' + d.y + ')';
       });
     }
+
     
+    function resize(width, height) {
+        if (width === undefined) {
+            width = div.node().clientWidth;
+            height = div.node().clientHeight - 5;
+        }
+        svg
+            .attr("width", width)
+            .attr("height", height);
+        svg.select("rect")
+            .attr("width", width)
+            .attr("height", height);
+        force.size([width, height]).resume();
+    }
+
     
     function restart() {
         
@@ -680,6 +697,7 @@ var Canvas = (function() {
         removelink: removelink,
         tojson: tojson,
         fromjson: fromjson,
+        resize: resize,
         nodes: function() { return g_nodes.slice(); },
         links: function() { return links.slice(); }
     };
