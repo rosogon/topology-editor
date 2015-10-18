@@ -43,10 +43,12 @@
                 <label for="name">Name</label>
                 <input type="text" class="form-control" id="name" placeholder="Module name">
               </div>
+              <!--
               <div class="form-group">
                 <label for="label">Label on screen</label>
                 <input type="text" class="form-control" id="label" placeholder="Module label">
               </div>
+            -->
           </fieldset>
           <fieldset id="set-code-tech">
               <legend>Technological Requirements <a href="#"><i class="fa fa-chevron-down"> </i></a></legend>
@@ -55,12 +57,19 @@
                 <select class="form-control" id="code-language"> </select>
               </div>
               <div class="form-group">
-                <label for="code-version">Version</label>
-                <select class="form-control" id="code-version" multiple> </select>
+                <label for="code-min-version">Min version</label>
+                <select class="form-control" id="code-min-version"></select>
+                <label for="code-max-version">Max version</label>
+                <select class="form-control" id="code-max-version"></select>
+              </div>
+              <div class="form-group">
+                <label for="code-container">Code container</label>
+                <select class="form-control" id="code-container"></select>
               </div>
               <div class="form-group">
                 <label for="code-artifact">Artifact</label>
-                <input type="file" class="form-control" id="code-artifact">
+                <input type="text" class="form-control" id="code-artifact"
+                    placeholder="http://www.server.com/path">
               </div>
           </fieldset>
           <fieldset id="set-database-tech">
@@ -70,15 +79,96 @@
                 <select class="form-control" id="database-category"> </select>
               </div>
               <div class="form-group">
+                <label for="database-min-version">Min version</label>
+                <select class="form-control" id="database-min-version"></select>
+                <label for="database-max-version">Max version</label>
+                <select class="form-control" id="database-max-version"></select>
+              </div>
+              <div class="form-group">
                 <label for="database-artifact">Initialization script</label>
-                <input type="file" class="form-control" id="database-artifact">
+                <input type="text" class="form-control" id="database-artifact"
+                    placeholder="http://www.server.com/path">
               </div>
           </fieldset>
           <fieldset id="set-nonfunctional">
               <legend>Non-functional Requirements <a href="#"><i class="fa fa-chevron-down"> </i></a></legend>
               <div class="form-group">
-                  <label for="nf-cost">Cost</label>
-                  <select class="form-control" id="nf-cost"> </select>
+                  <label for="nf-benchmark-responsetime">Benchmarked response time (ms)</label>
+                  <input type="text" class="form-control" id="nf-benchmark-responsetime"
+                         placeholder="100">
+                  <label for="nf-benchmark-platform">Benchmark platform</label>
+                  <select class="form-control" id="nf-benchmark-platform"> </select>
+              </div>
+
+              <div class="form-group">
+                  <label for="nf-qos">QoS</label>
+                  <table class="table table-bordered" id="nf-qos">
+                      <thead>
+                          <tr>
+                              <th>Metric name
+                              <th>Operator
+                              <th>Threshold
+                              <th>Actions
+                              <th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr>
+                              <td>
+                                  <input type="text" class="form-control" name="metric">
+                              <td>
+                                  <select class="form-control" name="operator" id="nf-qos-operator">
+                                      <option value=""> </option>
+                                      <option value="LT">&lt;</option>
+                                      <option value="LE">&lt;=</option>
+                                      <option value="EQ">=</option>
+                                      <option value="GE">&gt;=</option>
+                                      <option value="GT">&gt;</option>
+                                  </select>
+                              <td>
+                                  <input type="text" class="form-control" name="threshold">
+                              <td>
+                                  <select class="form-control" name="action" id="nf-qos-action">
+                                      <option value=""> </option>
+                                      <option value="scale_up">Scale up</option>
+                                      <option value="cloud_burst">Cloud Bursting</option>
+                                  </select>
+                              <td>
+                                  <button type="button" data-action="delete"><i class="fa fa-remove"> </i></button>
+                          </tr>
+                      </tbody>
+                      <tfoot>
+                          <tr>
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td><button type="button" id="nf-qos-add" data-action="add"><span class="fa fa-plus"> </span></button>
+                          </tr>
+                      </tfoot>
+                  </table>
+                  <!--<input type="text" class="form-control" id="nf-qos" name="nf-qos">-->
+              </div>
+          </fieldset>
+          <fieldset id="set-infrastructure">
+              <legend>Provider Infrastructure <a href="#"><i class="fa fa-chevron-down"> </i></a></legend>
+              <div class="form-group">
+                <label for="infrastructure">Provider is</label>
+                  <label class="radio-inline">
+                      <input type="radio" id="infrastructure-none" name="infrastructure" value="">Any
+                  </label>
+                <label class="radio-inline">
+                  <input type="radio" id="infrastructure-iaas" name="infrastructure" value="IAAS"> IaaS
+                </label>
+                <label class="radio-inline">
+                  <input type="radio" id="infrastructure-paas" name="infrastructure" value="PAAS"> PaaS
+                </label>
+              </div>
+              <div class="form-group" id="infrastructure-iaas-div">
+                <label for="nf-num-cpus">Num CPUs</label>
+                <input type="text" class="form-control" id="infrastructure-num-cpus" placeholder="4">
+                <label for="nf-num-cpus">Min Disk Size (GB)</label>
+                <input type="text" class="form-control" id="infrastructure-disk-size" placeholder="50">
               </div>
               <div class="form-group">
                   <label for="nf-location">Location</label>
@@ -100,62 +190,6 @@
                   <label for="nf-location-dynamic-options">Policy</label>
                   <select class="form-control" id="nf-location-dynamic-options"> </select>
               </div>
-              <div class="form-group">
-                  <label for="nf-qos">QoS</label>
-                  <table class="table table-bordered" id="nf-qos">
-                      <thead>
-                          <tr>
-                              <th>Metric name
-                              <th>Operator
-                              <th>Threshold
-                              <th>Actions 
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr>
-                              <td>
-                                  <input type="text" class="form-control" name="metric">
-                              <td>
-                                  <select class="form-control" name="operator" id="nf-qos-operator">
-                                      <option value=""> </option>
-                                      <option value="LT">&lt;</option>
-                                      <option value="LE">&lt;=</option>
-                                      <option value="EQ">=</option>
-                                      <option value="GE">&gt;=</option>
-                                      <option value="GT">&gt;</option>
-                                  </select>
-                              <td>
-                                  <input type="text" class="form-control" name="threshold">
-                              <td>
-                                  <button type="button" data-action="delete"><i class="fa fa-remove"> </i></button>
-                          </tr>
-                      </tbody>
-                      <tfoot>
-                          <tr>
-                              <td>
-                              <td>
-                              <td>
-                              <td><button type="button" id="nf-qos-add" data-action="add"><span class="fa fa-plus"> </span></button>
-                          </tr>
-                      </tfoot>
-                  </table>
-                  <!--<input type="text" class="form-control" id="nf-qos" name="nf-qos">-->
-              </div>
-          </fieldset>
-          <fieldset id="set-infrastructure">
-              <legend>Provider Infrastructure <a href="#"><i class="fa fa-chevron-down"> </i></a></legend>
-              <div class="form-group">
-                <label for="infrastructure">Provider is</label>
-                  <label class="radio-inline">
-                      <input type="radio" id="infrastructure-none" name="infrastructure" value="">None
-                  </label>
-                <label class="radio-inline">
-                  <input type="radio" id="infrastructure-iaas" name="infrastructure" value="IAAS"> IaaS
-                </label>
-                <label class="radio-inline">
-                  <input type="radio" id="infrastructure-paas" name="infrastructure" value="PAAS"> PaaS
-                </label>
-              </div>
           </fieldset>
         </form>
       </div>
@@ -166,7 +200,7 @@
     </div>
   </div>
 </div>
-    
+
 <div class="modal fade" id="update-link-form">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -180,38 +214,10 @@
       <div class="modal-body">
         <form role="form">
           <fieldset id="set-operations">
-              <legend>Description</legend>
-              <div class="form-group">
-                  <label for="link-operations">Operations</label>
-                  <table class="table table-bordered" id="link-operations">
-                      <thead>
-                          <tr>
-                              <th>Source operation
-                              <th>Target operation
-                              <th># Calls 
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr>
-                              <td>
-                                  <input type="text" class="form-control" name="source-operation-name">
-                              <td>
-                                  <input type="text" class="form-control" name="target-operation-name">
-                              <td>
-                                  <input type="text" class="form-control" name="operation-calls">
-                              <td>
-                                  <button type="button" data-action="delete"><i class="fa fa-remove"> </i></button>
-                          </tr>
-                      </tbody>
-                      <tfoot>
-                          <tr>
-                              <td>
-                              <td>
-                              <td>
-                              <td><button type="button" id="links-operations-add" data-action="add"><span class="fa fa-plus"> </span></button>
-                          </tr>
-                      </tfoot>
-                  </table>
+            <legend>Description</legend>
+            <div class="form-group">
+              <label for="operations-calls">Average number of calls</label>
+              <input type="text" class="form-control" id="operation-calls" placeholder="1">
               </div>
           </fieldset>
         </form>
@@ -239,44 +245,72 @@
 <script src="js/editor/editor.js"></script>
 <script>
 
+var Parent = {
+    type : "Parent",
+    name : "<Parent>",
+
+    init : function(type, name) {
+        this.type = type;
+        this.name = name;
+        console.log("Parent:init:" + type + ": " + name);
+        return this;
+    },
+};
+
+var Child = Object.create(Parent).init("Child", "<Child>");
+
+Child.init = function(name) {
+    this.type = "Child";
+    //this.prototype.init(this.type, name);
+    console.log("Child.init:" + this.type + ": " + this.name);
+    return this;
+}
+
+var instance = Object.create(Child).init("instance");
+
+
 var n0, n1, n2, n3, c0, c1;
 var canvas = Canvas();
 
 $(document).ready(function() {
     n0 = Object.create(Types.WebApplication).init({
-        name: "PHP Node", 
-        label: "PHP",
-        properties : { language: "PHP"},
+        name: "www",
+        label: "www",
+        properties : { language: "JAVA"},
+        behaviour: Editor.NodeBehaviour,
     });
     // n0.status = "running";
 
-    n1 = Object.create(Types.RestService).init({ 
-        name: "Rest Component", 
-        label : "rest1",
-        properties : { language : "JAVA" }
+    n1 = Object.create(Types.WebApplication).init({
+        name: "webservices",
+        label : "webservices",
+        properties : { language : "JAVA" },
+        behaviour: Editor.NodeBehaviour,
     });
 
     n2 = Object.create(Types.Database).init({
-        name : "Database1",
+        name : "db1",
         label : "db1",
-        properties : { category : "mysql" }
+        properties : { category : "database.mysql.MySqlNode" },
+        behaviour: Editor.NodeBehaviour,
     });
-    
+
     n3 = Object.create(Types.NoSql).init({
         name : "Database2",
         label : "db2",
+        properties: { category : "nosql.mongodb.MongoDBServer" }
     });
 
     c0 = Object.create(Types.Cloud).init({
         name : "CloudFoundry Pivotal",
         label : "CF"
     });
-    
+
     c1 = Object.create(Types.Cloud).init({
-        name : "Heroku", 
+        name : "Heroku",
         label : "Heroku"
     });
-    
+
     as0 = Object.create(Types.ApplicationServer).init({
         name : "as0",
         label : "as0",
@@ -292,16 +326,16 @@ $(document).ready(function() {
     canvas.addnode(n0);
     canvas.addnode(n1);
     canvas.addnode(n2);
-    canvas.addnode(n3);
-    canvas.addnode(c0);
-    canvas.addnode(c1);
+    //canvas.addnode(n3);
+    //canvas.addnode(c0);
+    //canvas.addnode(c1);
     // canvas.addnode(as0);
     // canvas.addnode(as1);
-    canvas.linknodes(n0, n1);
-    canvas.linknodes(n1, n2);
-    canvas.linknodes(n1, c0, "hostedon");
-    canvas.linknodes(n0, c0, "hostedon");
-    canvas.linknodes(n2, c1, "hostedon");
+    canvas.linknodes(n0, n1).behaviour = Editor.LinkBehaviour;
+    canvas.linknodes(n1, n2).behaviour = Editor.LinkBehaviour;
+    //canvas.linknodes(n1, c0, "hostedon");
+    //canvas.linknodes(n0, c0, "hostedon");
+    //canvas.linknodes(n2, c1, "hostedon");
     n0.qos = [
         { "metric": "runtime", "operator": "LT", "threshold": 2000 },
         { "metric": "availability", "operator": "GT", "threshold": 99.9 }
@@ -314,8 +348,8 @@ $(document).ready(function() {
 </script>
 
 <!--
-    
-    
+
+
 <div class="modal fade" id="add-database-form">
   <div class="modal-dialog">
     <div class="modal-content">

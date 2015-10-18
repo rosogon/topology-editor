@@ -22,7 +22,7 @@ var Types = function() {
         var d3_element = d3.select(dom_element);
         
         d3_element.select("circle.node").
-            attr("class", "node " + this.status);
+            attr("class", "node " + this.properties.status);
         
         d3_element.select(".nodelabel").text(this.label);
     };
@@ -36,6 +36,21 @@ var Types = function() {
     });
     
     
+    var BasicApplication = Object.create(Graph.Node).init({
+        name : "BasicApplication",
+        label : "app",
+        type : "BasicApplication",
+        icon : "\uf1b3",
+    });
+
+
+    var Host = Object.create(Graph.Node).init({
+        name : "Host",
+        label : "host",
+        type : "Host",
+        icon : "\uf233",
+    });
+
     var WebApplication = Object.create(Graph.Node).init({
         name : "WebApplication",
         label : "www",
@@ -90,14 +105,16 @@ var Types = function() {
     
 
     return {
+        BasicApplication: BasicApplication,
+        ApplicationServer: ApplicationServer,
         WebApplication: WebApplication,
+        Tomcat: Tomcat,
+        Apache: Apache,
+        Nginx: Nginx,
         Database: Database,
         RestService: RestService,
         NoSql : NoSql,
         Cloud: Cloud,
-        ApplicationServer,
-        Tomcat, 
-        Apache,
-        Nginx
+        Host : Host
     };
 }();

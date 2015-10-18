@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<head>
+<title>Seaclouds Topology Editor</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="css/canvas.css"/>
+<link rel="stylesheet" href="css/bootstrap.min.css"/>
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+<!--<link rel="stylesheet" href="css/font-awesome.min.css"/>-->
+<link rel="stylesheet" href="css/editor.css"/>
+</head>
+
+<body>
+
+
+<div id="canvas">
+</div>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/d3.min.js"></script>
+<script src="js/loglevel.js"></script>
+<script src="js/editor/log.js"></script>
+<script src="js/editor/graph.js"></script>
+<script src="js/editor/canvas.js"></script>
+<script src="js/editor/types.js"></script>
+<script src="js/editor/forms.js"></script>
+<script src="js/editor/status.js"></script>
+<script src="js/editor/editor.js"></script>
+<script>
+
+var n0, n1, n2, n3, c0, c1;
+var canvas = Canvas();
+
+$(document).ready(function() {
+    n0 = Object.create(Types.WebApplication).init({
+        name: "www",
+        label: "www",
+        properties : {
+            language: "JAVA",
+            status: "running",
+        },
+        behaviour: Status.NodeBehaviour,
+    });
+    // n0.status = "running";
+
+    n1 = Object.create(Types.WebApplication).init({
+        name: "webservices",
+        label : "webservices",
+        properties : {
+            language : "JAVA",
+            status: "running",
+        },
+        behaviour: Status.NodeBehaviour,
+    });
+
+    n2 = Object.create(Types.Database).init({
+        name : "db1",
+        label : "db1",
+        properties : {
+            category : "database.mysql.MySqlNode",
+            status: "stopped",
+        },
+        behaviour: Status.NodeBehaviour
+    });
+
+    n3 = Object.create(Types.NoSql).init({
+        name : "Database2",
+        label : "db2",
+        properties: { category : "nosql.mongodb.MongoDBServer" }
+    });
+
+    c0 = Object.create(Types.Cloud).init({
+        name : "CloudFoundry Pivotal",
+        label : "CF"
+    });
+
+    c1 = Object.create(Types.Cloud).init({
+        name : "Heroku",
+        label : "Heroku"
+    });
+
+    as0 = Object.create(Types.ApplicationServer).init({
+        name : "as0",
+        label : "as0",
+    });
+    as1 = Object.create(Types.Tomcat).init({
+        name : "as1",
+        label : "as1"
+    });
+
+    canvas.init("canvas", {
+        addlinkcallback : Editor.addlinkcallback
+    });
+    canvas.addnode(n0);
+    canvas.addnode(n1);
+    canvas.addnode(n2);
+    //canvas.addnode(n3);
+    //canvas.addnode(c0);
+    //canvas.addnode(c1);
+    // canvas.addnode(as0);
+    // canvas.addnode(as1);
+    canvas.linknodes(n0, n1).behaviour = Status.LinkBehaviour;
+    canvas.linknodes(n1, n2).behaviour = Status.LinkBehaviour;
+    //canvas.linknodes(n1, c0, "hostedon");
+    //canvas.linknodes(n0, c0, "hostedon");
+    //canvas.linknodes(n2, c1, "hostedon");
+    n0.qos = [
+        { "metric": "runtime", "operator": "LT", "threshold": 2000 },
+        { "metric": "availability", "operator": "GT", "threshold": 99.9 }
+    ];
+    n0.versions = [ 5.3, 5.4, 5.5 ];
+    Status.init(canvas);
+    canvas.restart();
+});
+
+</script>
+
+<!--
+
+
+<div class="modal fade" id="add-database-form">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Close</span>
+        </button>
+        <h4 class="modal-title">Add new database</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <fieldset>
+              <legend>Description</legend>
+              <div class="form-group">
+                <label for="database-name">Name</label>
+                <input type="text" class="form-control" id="database-name" placeholder="Module name">
+              </div>
+              <div class="form-group">
+                <label for="database-label">Label</label>
+                <input type="text" class="form-control" id="database-label" placeholder="Module label">
+              </div>
+          </fieldset>
+          <fieldset>
+              <legend>Technological Requirements</legend>
+              <div class="form-group">
+                <label for="database-category">Category</label>
+                <select class="form-control" id="database-category">
+                    <option>MySql</option>
+                    <option>Oracle</option>
+                    <option>PostgreSQL</option>
+                    <option>MongoDB</option>
+                    <option>Redis</option>
+                </select>
+              </div>
+          </fieldset>
+          <fieldset>
+              <legend>Non-functional Requirements</legend>
+          </fieldset>
+          <fieldset>
+              <legend>Provider Infrastructure</legend>
+              <div class="form-group">
+                <label for="webapplication-infrastructure">Provider is</label>
+                <label class="radio-inline">
+                  <input type="radio" id="database-infrastructure-iaas" name="database-infrastructure" value="iaas"> IaaS
+                </label>
+                <label class="radio-inline">
+                  <input type="radio" id="database-infrastructure-paas" name="database-infrastructure" value="paas"> PaaS
+                </label>
+              </div>
+          </fieldset>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="database-add" type="button" class="btn btn-primary">Add!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <button type="button" class="btn btn-default" data-toggle="modal" data-target="#add-node-form">
+    Add node
+  </button>
+<div class="modal fade" id="add-node-form">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">Add new node</h4>
+      </div>
+      <div class="modal-body">
+        <form role="form">
+          <div class="form-group">
+            <label for="new-node-label">Label</label>
+            <input type="text" class="form-control" id="new-node-label" placeholder="Module name">
+          </div>
+          <div class="form-group">
+            <label for="new-node-type">Type</label>
+            <select class="form-control" id="new-node-type">
+                <option>web application</option>
+                <option>database</option>
+                <option>web services</option>
+                <option>other</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+-->
