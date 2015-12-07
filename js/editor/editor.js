@@ -18,8 +18,8 @@ var Editor = (function() {
     var LOCATION_STATIC = "STATIC";
     var LOCATION_DYNAMIC = "DYNAMIC";
 
-    var INFRASTRUCTURE_IAAS = "IAAS";
-    var INFRASTRUCTURE_PAAS = "PAAS";
+    var INFRASTRUCTURE_IAAS = "compute";
+    var INFRASTRUCTURE_PAAS = "platform";
 
     var language_options = {
         "": "",
@@ -208,13 +208,13 @@ var Editor = (function() {
     function init(canvas) {
         this.canvas = canvas;
 
-        populate_controls();
         initialize_fieldssets();
         initialize_forms();
 
         /*
          * Edit/Delete node
          */
+        $('body').off('click', '.popover button[data-nodeindex]');
         $('body').on('click', '.popover button[data-nodeindex]', function () {
             var index = this.getAttribute("data-nodeindex");
 
@@ -253,6 +253,7 @@ var Editor = (function() {
         /*
          * Edit/delete link
          */
+        $('body').off('click', '.popover button[data-linkindex]');
         $('body').on('click', '.popover button[data-linkindex]', function () {
             var index = this.getAttribute("data-linkindex");
 
@@ -283,7 +284,7 @@ var Editor = (function() {
                     canvas.firechange();
                 });
             }
-                });
+        });
 
         $("#add-buttons- [data-type]").on("click", function() {
             var datatype = this.getAttribute("data-type");
@@ -346,6 +347,7 @@ var Editor = (function() {
             link.target.type === Types.Cloud.type) {
             return undefined;
         }
+        link.behaviour = LinkBehaviour
         activeform = linkform;
         activeform.reset();
         activeform.load(link);
